@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calcule o percentual da sua formação na Etapa I, conforme a IN 005/2026/SEMEC.">
+<meta name="theme-color" content="#0b3f91">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Calculadora da Etapa I</title>
+<style>
+/* Layout: faixa azul com o Tangará e o título; abaixo, "1. Seu grupo" e "2. Horas" à esquerda e "Seu percentual" à direita
+   (no celular, tudo numa coluna). Cores do Portal SEMEC e do Tangará: azul da plumagem, dourado da medalha. */
+:root {
+  color-scheme: light;
+  --sky: #eaf2fd;
+  --surface: #ffffff;
+  --soft: #f1f6fd;
+  --line: #d6e2f3;
+  --text: #0f1f3d;
+  --muted: #55637f;
+  --navy: #0b3f91;
+  --blue: #1f5fc9;
+  --blue-soft: #e3eefc;
+  --gold: #f2b01e;
+  --ok: #157a46;   --ok-soft: #e2f5e9;
+  --warn: #9a6400; --warn-soft: #fff3d6;
+  --low: #b02a2a;  --low-soft: #fde6e6;
+  --on-blue: #ffffff;
+  --font: "Nunito", "Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --sky: #0b1424; --surface: #121f35; --soft: #172843; --line: #263a5a; --text: #e9eff9; --muted: #a2b3cc;
+    --navy: #a9c8f5; --blue: #5b95ef; --blue-soft: #1a2d4b; --gold: #f2c04e;
+    --ok: #6fd49e; --ok-soft: #13301f; --warn: #f0c060; --warn-soft: #33280c; --low: #f29b9b; --low-soft: #3a1818;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--sky); color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1.5; padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+.topo {
+  background: linear-gradient(135deg, #0b3f91 0%, #1f5fc9 70%, #2f7ae0 100%);
+  color: #ffffff;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 18px); padding-bottom: 22px;
+  border-bottom: 4px solid #f2b01e;
+}
+.topo-in { max-width: 1080px; margin: 0 auto; display: flex; gap: 18px; align-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.topo img { width: 92px; height: 92px; flex: none; filter: drop-shadow(0 6px 12px rgba(0,0,0,.25)); }
+.topo .marca { margin: 0; font-weight: 800; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: #f2c04e; }
+.topo h1 { margin: 2px 0 4px; font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; font-weight: 900; text-wrap: balance; }
+.topo p.sub { margin: 0; max-width: 60ch; color: #dce8fb; }
+
+main { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 32px; }
+.grade { display: grid; gap: 18px; align-items: start; }
+@media (min-width: 880px) { .grade { grid-template-columns: minmax(0, 1fr) 340px; } .lado { position: sticky; top: 16px; } }
+.coluna, .lado { display: grid; gap: 18px; min-width: 0; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: 0 6px 18px rgba(11,63,145,.07); }
+.card-topo { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--blue-soft); color: var(--navy); }
+.card-topo h2 { margin: 0; font-size: 1.1rem; font-weight: 900; }
+.num { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--blue); color: #ffffff; font-weight: 900; }
+.card-corpo { padding: 16px; display: grid; gap: 12px; }
+
+label.campo { display: grid; gap: 6px; font-weight: 700; }
+select, input[type="number"] { width: 100%; min-height: 48px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; padding: 0 12px; }
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.ref { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--blue-soft); color: var(--navy); font-weight: 800; font-variant-numeric: tabular-nums; }
+.nota { margin: 0; color: var(--muted); font-size: .9rem; }
+.vazio { margin: 0; padding: 14px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--muted); text-align: center; }
+
+.itens { display: grid; gap: 10px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 4px 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); }
+.item label { font-weight: 800; min-width: 0; }
+.item small { grid-column: 1; color: var(--muted); font-size: .85rem; }
+.item .entrada { grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: center; gap: 6px; }
+.item .entrada span { color: var(--muted); font-weight: 800; }
+.item input { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+.item.passou small { color: var(--warn); font-weight: 800; }
+
+.resultado .card-topo { background: var(--navy); color: #ffffff; justify-content: center; }
+.resultado .card-topo h2 { color: #ffffff; }
+.resultado .card-corpo { text-align: center; gap: 10px; }
+.pct { margin: 4px 0 0; font-size: clamp(3.2rem, 13vw, 4.4rem); font-weight: 900; line-height: 1; color: var(--navy); font-variant-numeric: tabular-nums; }
+.horas { margin: 0; color: var(--blue); font-weight: 800; font-variant-numeric: tabular-nums; }
+.detalhe { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.detalhe b { color: var(--text); }
+.barra { height: 14px; border-radius: 999px; background: var(--blue-soft); overflow: hidden; position: relative; }
+.barra span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f5fc9, #0b3f91); border-radius: 999px; transition: width .35s ease; }
+.marcas { position: relative; height: 1.2em; color: var(--muted); font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.marcas b { position: absolute; top: 0; transform: translateX(-50%); }
+.faixa { justify-self: center; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; font-weight: 900; }
+.faixa.alta { background: var(--ok-soft); color: var(--ok); }
+.faixa.media { background: var(--warn-soft); color: var(--warn); }
+.faixa.baixa { background: var(--low-soft); color: var(--low); }
+.faixa.nada { background: var(--soft); color: var(--muted); }
+button.copiar { min-height: 50px; border: 0; border-radius: 14px; background: var(--blue); color: #ffffff; font: inherit; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 6px 14px rgba(31,95,201,.3); }
+button.copiar:hover { background: #1a52ad; }
+button.copiar:disabled { opacity: .5; cursor: default; box-shadow: none; }
+.copiado { margin: 0; min-height: 1.4em; color: var(--ok); font-weight: 800; font-size: .9rem; }
+textarea#resumo { width: 100%; min-height: 130px; font: inherit; font-size: .85rem; border: 1px solid var(--line); border-radius: 12px; padding: 8px; background: var(--soft); color: var(--text); }
+
+.intro { margin: 0; max-width: 75ch; color: var(--text); }
+.card-topo h2 { flex: 1; min-width: 0; }
+.num { width: auto; min-width: 30px; padding: 0 8px; border-radius: 999px; font-size: .85rem; }
+.pts { flex: none; padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--navy); font-weight: 900; font-size: .9rem; border: 1.5px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pts.tem { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.regra { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--soft); color: var(--muted); font-size: .9rem; }
+.regra b { color: var(--text); }
+.parcial { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-weight: 800; }
+.parcial b { font-size: 1.6rem; color: var(--navy); font-variant-numeric: tabular-nums; }
+.marcar { display: flex; gap: 10px; align-items: flex-start; font-weight: 700; cursor: pointer; }
+.marcar input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--blue); }
+.quadro { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: left; }
+.quadro th, .quadro td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.quadro th { font-weight: 800; }
+.quadro td { color: var(--muted); font-size: .88rem; }
+.quadro td:last-child { text-align: right; color: var(--navy); font-weight: 900; font-size: 1rem; }
+.faixas ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.faixas li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-weight: 800; }
+.faixas li.baixa { background: var(--low-soft); color: var(--low); }
+.faixas li.media { background: var(--warn-soft); color: var(--warn); }
+.faixas li.alta { background: var(--ok-soft); color: var(--ok); }
+.faixas li svg { width: 20px; height: 20px; flex: none; }
+
+.servico .card-corpo p { margin: 0; max-width: 80ch; }
+.servico .card-topo { background: var(--ok-soft); color: var(--text); }
+.servico .card-topo h2 { color: var(--text); }
+.aviso { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--gold); border-radius: 12px; }
+.aviso svg { width: 24px; height: 24px; flex: none; color: var(--blue); }
+.aviso p { margin: 0; }
+footer { background: var(--navy); color: #dce8fb; text-align: center; font-size: .85rem;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+@media (prefers-color-scheme: dark) { footer { background: #0a1730; } .resultado .card-topo { background: #1a3a75; } }
+@media (max-width: 520px) { .topo img { width: 68px; height: 68px; } }
+@media (prefers-reduced-motion: reduce) { .barra span { transition: none; } }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="topo-in">
+    <img src="mascote.webp" alt="" width="92" height="92">
+    <div>
+      <p class="marca">SEMEC · Formação Continuada 2026</p>
+      <h1>Calculadora da Etapa I</h1>
+      <p class="sub">Calcule o percentual da sua formação na Etapa I, conforme a IN 005/2026/SEMEC.</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grade">
+    <div class="coluna">
+      <section class="card" aria-labelledby="t1">
+        <div class="card-topo"><span class="num">1</span><h2 id="t1">Seu grupo</h2></div>
+        <div class="card-corpo">
+          <label class="campo" for="grupo">Etapa ou turma em que você está lotado(a)
+            <select id="grupo"><option value="">Escolha o seu grupo</option></select>
+          </label>
+          <p class="ref" id="ref" hidden></p>
+          <p class="nota" id="notaGrupo" hidden></p>
+          <label class="marcar" for="campo" id="campoLinha" hidden><input type="checkbox" id="campo"> Atuo em escola do campo (a IN acrescenta Educação Financeira e Material Estruturado de Língua Inglesa)</label>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="t2">
+        <div class="card-topo"><span class="num">2</span><h2 id="t2">Horas dos seus certificados da Etapa I</h2></div>
+        <div class="card-corpo">
+          <p class="nota">Digite as horas como estão nos seus certificados. Cada formação conta até a carga prevista; o que passar dela e as horas da Formação em Serviço são <b>horas complementares</b>, que completam o que faltar para o 100% do seu grupo.</p>
+          <div class="itens" id="itens"><p class="vazio">Escolha o seu grupo para ver as formações da sua Etapa I.</p></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="lado">
+      <section class="card resultado" aria-labelledby="t3">
+        <div class="card-topo"><h2 id="t3">Seu percentual da Etapa I</h2></div>
+        <div class="card-corpo" aria-live="polite">
+          <p class="pct" id="pct">–</p>
+          <p class="horas" id="horas">escolha o seu grupo</p>
+          <p class="detalhe" id="detalhe" hidden></p>
+          <div class="barra" aria-hidden="true"><span id="barra"></span></div>
+          <div class="marcas" aria-hidden="true"><b style="left:0;transform:none">0%</b><b style="left:60%">60%</b><b style="left:80%">80%</b><b style="right:0;transform:none">100%</b></div>
+          <span class="faixa nada" id="faixa">sem horas informadas</span>
+          <button class="copiar" type="button" id="copiar" disabled>Copiar resumo</button>
+          <p class="copiado" id="copiado"></p>
+          <textarea id="resumo" readonly hidden aria-label="Resumo para copiar"></textarea>
+        </div>
+      </section>
+
+      <section class="card faixas" aria-labelledby="t4">
+        <div class="card-topo"><h2 id="t4">Faixas da IN 005/2026 (Art. 13)</h2></div>
+        <div class="card-corpo">
+          <ul>
+            <li class="baixa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 9 6 6M15 9l-6 6"/></svg>Abaixo de 60%</li>
+            <li class="media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg>De 60% a 79%</li>
+            <li class="alta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>De 80% a 100%</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card servico" aria-labelledby="t5">
+    <div class="card-topo"><h2 id="t5">Todas as suas horas de formação contam</h2></div>
+    <div class="card-corpo">
+      <p>As horas dos encontros da Formação em Serviço e as horas que passam da carga prevista de cada formação entram no cálculo como <strong>horas complementares</strong>.</p>
+      <p>Elas se somam às demais horas da Etapa I e completam o que faltar para chegar a 100% da carga do seu grupo. Assim, a sua participação nos encontros da SEMEC é aproveitada no seu percentual.</p>
+    </div>
+  </section>
+
+  <div class="aviso">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/></svg>
+    <p><strong>Esta calculadora é uma simulação.</strong> Na contagem de pontos valem os certificados que você apresentar. Nada do que você digita aqui é enviado ou guardado.</p>
+  </div>
+</main>
+
+<footer>Cargas horárias conforme a IN nº 005/2026/SEMEC (Art. 5º) e a IN Complementar nº 04/2026/SEMEC · SEMEC Tangará da Serra</footer>
+
+<script>
+/*
+ * TABELA DOS GRUPOS — ao pé da letra da IN 005/2026/SEMEC, Art. 5º, Etapa I (Lucimar, 24/11/2026), com a Complementar 04/2026
+ * (NeuroSaber Pré I e II 48 h -> 30 h; ProLEEI 130 h -> 126 h).
+ * Para mudar uma carga, mude só aqui: "total" é o 100% do grupo e cada item é
+ * [nome, horas previstas, observação opcional].
+ */
+const GRUPOS = [
+  { id: 'pre', nome: 'Educação Infantil – Pré I e Pré II', total: 176, itens: [
+    ['NeuroSaber', 30], ['ProLEEI', 126], ['BNCC da Computação', 20] ] },
+  { id: 'mat3', nome: 'Educação Infantil – Maternal III', total: 82, itens: [
+    ['NeuroSaber', 30], ['BNCC da Computação', 20], ['Plataforma AVAMEC e/ou Nova Escola', 32, 'curso da lista enviada pela coordenação da etapa'] ] },
+  { id: 'bercario', nome: 'Educação Infantil – Berçário, Maternal I e Maternal II', total: 100, itens: [
+    ['BNCC da Computação', 20], ['Lei Lucas', 4], ['Mais Infância', 32], ['Plataforma AVAMEC e/ou Nova Escola', 44, 'curso da lista enviada pela coordenação da etapa'] ] },
+  { id: 'ai12', nome: 'Anos Iniciais – 1º e 2º ano', total: 230, itens: [
+    ['Alfabetiza MT (1º e 2º anos)', 100], ['Ensino da Matemática – UNEMAT', 130] ] },
+  { id: 'ai34', nome: 'Anos Iniciais – 3º e 4º ano', total: 194, itens: [
+    ['Recomposição de Aprendizagem – Alfabetiza MT', 64], ['Ensino da Matemática – UNEMAT', 130] ] },
+  // 5º ano: total de 80 h, como no Art. 5º ("Professores do 5º ano poderão ter um total de 80h"; Lucimar, 24/11/2026).
+  { id: 'ai5', nome: 'Anos Iniciais – 5º ano', total: 80, itens: [
+    ['Recomposição de Aprendizagem – Alfabetiza MT', 64], ['Tecnologias na Educação – SEMEC/SEBRAE', 16] ] },
+  { id: 'af', nome: 'Anos Finais – Língua Portuguesa, Matemática, Geografia/História, Educação Física ou Arte', total: 100, nota: 'Os cursos on-line completam a carga mínima de 100 h.', itens: [
+    ['Formação do seu componente – SEMEC/SEBRAE', 24],
+    ['Cursos on-line em plataformas autorizadas', 76, 'AVAMEC, PlaforEdu, Plataforma Aprenda, Brasil EAD'] ] },
+  { id: 'af_cie', nome: 'Anos Finais – Ciências', total: 100, nota: 'Os cursos on-line completam a carga mínima de 100 h.', itens: [
+    ['Ciências – SEMEC/SEBRAE', 24], ['Formação Laboratório de Ciências', 8],
+    ['Cursos on-line em plataformas autorizadas', 68, 'AVAMEC, PlaforEdu, Plataforma Aprenda, Brasil EAD'] ] },
+  { id: 'af_ing', nome: 'Anos Finais – Língua Inglesa', total: 100, nota: 'Os cursos on-line completam a carga mínima de 100 h.', itens: [
+    ['Língua Inglesa – SEMEC/SEBRAE', 24], ['Formação Material Estruturado', 32],
+    ['Cursos on-line em plataformas autorizadas', 44, 'AVAMEC, PlaforEdu, Plataforma Aprenda, Brasil EAD'] ] },
+  { id: 'esp_sala', nome: 'Educação Especial – Sala Multifuncional', total: 60, itens: [
+    ['Programa Escola Inclusiva – NeuroSaber', 60] ] },
+  { id: 'esp_mat', nome: 'Educação Especial – Professores que Ensinam Matemática', total: 120, itens: [
+    ['Formação de Professores que Ensinam Matemática', 120] ] },
+  { id: 'indigena', nome: 'Educação Escolar Indígena – Pré I e Pré II', total: 126, nota: 'A IN também prevê a formação da equipe de coordenação indígena da SEMEC, sem carga horária definida.', itens: [
+    ['ProLEEI', 126] ] },
+  { id: 'gestao', nome: 'Gestão escolar – diretor(a) e coordenador(a)', total: 84, semServico: true, itens: [
+    ['Formação SEMEC (gestores)', 20], ['Formação Alfabetiza (gestão)', 64] ] }
+];
+
+/*
+ * HORAS COMPLEMENTARES (decisão da SEMEC, 24/11/2026):
+ * - O 100% do grupo é a carga da IN 005/2026 (com a Complementar 04).
+ * - Cada formação da IN conta até a carga prevista. O que passar dela vira hora complementar.
+ * - A Formação em Serviço (encontros da Formação em Rede, SEMEC) é toda hora complementar.
+ * - As horas complementares completam o que faltou para chegar ao 100% do grupo (nunca passam de 100%).
+ * Na Gestão escolar a Formação em Serviço já é a "Formação SEMEC (gestores)".
+ */
+const FORMACAO_SERVICO = ['Formação em Serviço – Formação em Rede (SEMEC)', null, 'encontros de formação da SEMEC; veja o certificado da Formação em Rede'];
+// Educação do Campo (Art. 5º, item 6): além das formações da sua etapa/turma, Educação Financeira (4 h)
+// e Formação Material Estruturado de Língua Inglesa (32 h). Entram quando a pessoa marca "escola do campo".
+const CAMPO = [['Educação Financeira (Educação do Campo)', 4], ['Formação Material Estruturado de Língua Inglesa (Educação do Campo)', 32]];
+function ehCampo() { const c = document.getElementById('campo'); return !!(c && c.checked); }
+// Quem já tem o Material Estruturado no grupo (Anos Finais – Língua Inglesa) não conta duas vezes.
+function campoDo(g) { return ehCampo() && !g.semServico ? CAMPO.filter(c => !(/Material Estruturado/.test(c[0]) && g.itens.some(i => /Material Estruturado/.test(i[0])))) : []; }
+function totalDo(g) { return g.total + campoDo(g).reduce((t, x) => t + x[1], 0); }
+
+const $ = id => document.getElementById(id);
+const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
+let grupo = null;
+
+$('grupo').insertAdjacentHTML('beforeend', GRUPOS.map(g => '<option value="' + g.id + '">' + g.nome + '</option>').join(''));
+
+// A Formação em Serviço (encontros da Formação em Rede, SEMEC) entra em todos os grupos,
+// menos na Gestão, onde ela já é a "Formação SEMEC (gestores)".
+function itensDo(g) { return g.semServico ? g.itens : [FORMACAO_SERVICO].concat(g.itens, campoDo(g)); }
+
+function desenharItens() {
+  if (!grupo) {
+    $('ref').hidden = true; $('notaGrupo').hidden = true; $('campoLinha').hidden = true;
+    $('itens').innerHTML = '<p class="vazio">Escolha o seu grupo para ver as formações da sua Etapa I.</p>';
+    return calcular();
+  }
+  $('ref').hidden = false;
+  $('campoLinha').hidden = !!grupo.semServico;
+  $('ref').textContent = 'Formação do grupo: ' + totalDo(grupo) + ' h = 100%';
+  $('notaGrupo').textContent = grupo.nota || '';
+  $('notaGrupo').hidden = !grupo.nota;
+  $('itens').innerHTML = itensDo(grupo).map((it, i) =>
+    '<div class="item" id="item' + i + '">' +
+      '<label for="h' + i + '">' + it[0] + '</label>' +
+      '<div class="entrada"><input type="number" id="h' + i + '" inputmode="decimal" min="0" step="0.5" placeholder="0" aria-describedby="obs' + i + '"><span>h</span></div>' +
+      '<small id="obs' + i + '"></small>' +
+    '</div>').join('');
+  calcular();
+}
+
+function calcular() {
+  if (!grupo) {
+    $('pct').textContent = '–'; $('horas').textContent = 'escolha o seu grupo'; $('detalhe').hidden = true; $('barra').style.width = '0';
+    $('faixa').className = 'faixa nada'; $('faixa').textContent = 'sem horas informadas';
+    $('copiar').disabled = true; $('copiado').textContent = ''; $('resumo').hidden = true;
+    return;
+  }
+  let daIN = 0, compl = 0;
+  const linhas = [], total = totalDo(grupo);
+  itensDo(grupo).forEach((it, i) => {
+    const v = Math.max(0, Number(String($('h' + i).value).replace(',', '.')) || 0);
+    const complementar = it[1] === null;
+    const dentro = complementar ? 0 : Math.min(v, it[1]);
+    const excede = v - dentro;
+    daIN += dentro; compl += excede;
+    $('item' + i).classList.toggle('passou', excede > 0 && !complementar);
+    $('obs' + i).textContent = complementar ? 'conta como hora complementar · ' + it[2]
+      : (excede > 0 ? fmt(excede) + ' h passam da carga prevista (' + it[1] + ' h) e viram horas complementares'
+      : 'prevista: ' + it[1] + ' h' + (it[2] ? ' · ' + it[2] : ''));
+    if (v > 0) linhas.push('- ' + it[0] + ': ' + fmt(v) + ' h' + (complementar ? ' (complementar)' : (excede > 0 ? ' (' + fmt(excede) + ' h complementares)' : '')));
+  });
+  const falta = Math.max(0, total - daIN);
+  const usadas = Math.min(compl, falta);
+  const conta = daIN + compl;
+  const considerado = Math.min(daIN + usadas, total);
+  const pct = Math.min(100, Math.floor(considerado / total * 100));
+  $('pct').textContent = pct + '%';
+  $('horas').textContent = fmt(considerado) + ' h de ' + total + ' h';
+  $('detalhe').innerHTML = 'Formações da IN: <b>' + fmt(daIN) + ' h</b><br>Horas complementares: <b>' + fmt(compl) + ' h</b>' +
+    (compl > 0 ? ' (usadas ' + fmt(usadas) + ' h)' : '');
+  $('detalhe').hidden = !conta;
+  $('barra').style.width = pct + '%';
+  const f = $('faixa');
+  if (!conta) { f.className = 'faixa nada'; f.textContent = 'sem horas informadas'; }
+  else if (pct >= 80) { f.className = 'faixa alta'; f.textContent = '✓ Faixa de 80% a 100%'; }
+  else if (pct >= 60) { f.className = 'faixa media'; f.textContent = 'Faixa de 60% a 79%'; }
+  else { f.className = 'faixa baixa'; f.textContent = 'Abaixo de 60%'; }
+  $('copiar').disabled = !conta;
+  $('resumo').value = 'Etapa I 2026 — ' + grupo.nome + '\n' + (linhas.length ? linhas.join('\n') : '- nenhuma hora informada') +
+    '\nFormações da IN: ' + fmt(daIN) + ' h · Horas complementares: ' + fmt(compl) + ' h (usadas ' + fmt(usadas) + ' h)' +
+    '\nTotal considerado: ' + fmt(considerado) + ' h de ' + total + ' h\nPercentual da Etapa I: ' + pct + '%' +
+    '\n(Simulação pela IN 005/2026/SEMEC; na contagem de pontos valem os certificados.)';
+  $('copiado').textContent = '';
+}
+
+$('grupo').addEventListener('change', e => { grupo = GRUPOS.find(g => g.id === e.target.value) || null; $('resumo').hidden = true; desenharItens(); });
+$('itens').addEventListener('input', calcular);
+$('campo').addEventListener('change', () => { const v = itensDo(grupo || GRUPOS[0]).map((_, i) => ($('h' + i) || {}).value); desenharItens(); v.forEach((x, i) => { if ($('h' + i) && x) $('h' + i).value = x; }); calcular(); });
+$('copiar').addEventListener('click', () => {
+  const t = $('resumo').value;
+  const mostrar = () => { $('resumo').hidden = false; $('resumo').select(); $('copiado').textContent = 'Selecione e copie o texto abaixo.'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => { $('copiado').textContent = 'Resumo copiado.'; }).catch(mostrar);
+  else mostrar();
+});
+
+if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {} }
+</script>
+</body>
+</html>
