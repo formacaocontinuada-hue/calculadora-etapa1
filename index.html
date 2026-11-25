@@ -57,6 +57,13 @@ img { max-width: 100%; }
 .topo .marca { margin: 0; font-weight: 800; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: #f2c04e; }
 .topo h1 { margin: 2px 0 4px; font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; font-weight: 900; text-wrap: balance; }
 .topo p.sub { margin: 0; max-width: 60ch; color: #dce8fb; }
+.topo-volta { max-width: 1080px; margin: 0 auto 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.topo-volta a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px; border-radius: 999px;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #ffffff; font-weight: 800; font-size: .92rem; text-decoration: none; }
+.topo-volta a:hover, .topo-volta a:focus-visible { background: rgba(255,255,255,.24); }
+.topo-volta a:focus-visible { outline: 3px solid #f2c04e; outline-offset: 2px; }
+.topo-volta svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
 main { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 32px; }
@@ -146,6 +153,9 @@ footer { background: var(--navy); color: #dce8fb; text-align: center; font-size:
 </head>
 <body>
 <header class="topo">
+  <nav class="topo-volta" aria-label="Voltar">
+    <a id="voltaPortal" href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span id="voltaTexto">Voltar ao Portal SEMEC</span></a>
+  </nav>
   <div class="topo-in">
     <img src="mascote.webp" alt="" width="92" height="92">
     <div>
@@ -366,6 +376,17 @@ $('copiar').addEventListener('click', () => {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => { $('copiado').textContent = 'Resumo copiado.'; }).catch(mostrar);
   else mostrar();
 });
+
+/* Caminho de volta: o Portal manda ?de=escola|semec|formador e o botão volta para a mesma área. */
+(function () {
+  const AREAS = { escola: ['escola.html', 'Área da Escola'], semec: ['semec.html', 'Área da SEMEC'], formador: ['formador.html', 'Área do Formador'] };
+  let de = '';
+  try { de = new URLSearchParams(location.search).get('de') || ''; } catch (e) {}
+  const a = AREAS[de];
+  if (!a) return;
+  document.getElementById('voltaPortal').href = 'https://formacaocontinuada-hue.github.io/portalsemec_tgamt/' + a[0];
+  document.getElementById('voltaTexto').textContent = 'Voltar para a ' + a[1];
+})();
 
 if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {} }
 </script>
