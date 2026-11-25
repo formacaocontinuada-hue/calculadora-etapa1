@@ -1,5 +1,5 @@
 // Calculadora da Etapa I: guarda a página para funcionar sem internet
-const CACHE = "calculadora-etapa1-20261124c";
+const CACHE = "calculadora-etapa1-20261125a";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./mascote.webp", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./favicon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
